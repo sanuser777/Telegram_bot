@@ -1,0 +1,41 @@
+const TelegramBot = require('node-telegram-bot-api');
+const yts = require('yt-search');
+const { yta } = require('./lib/y2mate'); // നിങ്ങളുടെ യഥാർത്ഥ ലൈബ്രറി
+
+const token = 'YOUR_TELEGRAM_BOT_TOKEN';
+const bot = new TelegramBot(token, { polling: true });
+
+bot.onText(/\/play (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const query = match[1];
+
+  if (!query) {
+    return bot.sendMessage(chatId, "Please provide a song name or YouTube link.");
+  }
+
+  bot.sendMessage(chatId, "Searching...");
+
+  try {
+    const results = await yts(query);
+    if (!results || !results.videos.length) {
+      return bot.sendMessage(chatId, "No results found!");
+    }
+
+    const video = results.videos[0];
+    const videoUrl = video.url;
+
+    const dl = await yta(videoUrl); // download audio using y2mate wrapper
+    if (!dl) {
+      return bot.sendMessage(chatId, "Failed to download audio.");
+    }
+
+    // Send audio file to Telegram chat
+    await bot.sendAudio(chatId, dl.dl_link, {
+      title: video.title,
+      performer: video.author.name,
+      thumb: video.thumbnail,
+    });
+  } catch (e) {
+    bot.sendMessage(chatId, "Error: " + e.message);
+  }
+});
