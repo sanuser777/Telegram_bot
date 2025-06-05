@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: telegram-bot
+    env: node
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TOKEN
+        value: 7753554093:AAGM-n3jyyXj2BbXDYgWG0YeshTtd8NTyM8
